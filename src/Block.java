@@ -5,43 +5,41 @@ import bagel.util.Point;
 import bagel.util.Rectangle;
 
 public class Block extends GameObject{
-    private final Image BLANK_TET = new Image("res/blocks/-Tet.png");
+    private final Image BLANK_TET = new Image("res/blocks/Tet.png");
     private final Image I_TET = new Image("res/blocks/ITet.png");
     private final Image J_TET = new Image("res/blocks/JTet.png");
     private final Image L_TET = new Image("res/blocks/LTet.png");
     private final Image O_TET = new Image("res/blocks/OTet.png");
+    private final Image S_TET = new Image("res/blocks/STet.png");
     private final Image T_TET = new Image("res/blocks/TTet.png");
     private final Image Z_TET = new Image("res/blocks/ZTet.png");
-    private final Image TET = new Image("res/blocks/Tet.png");
-    
-    protected ArrayList<Rectangle> blocks;
-
-    public Block(Point topleft, String colour) {
-        super(topleft, 12, 12);
-        switch (colour) {
-            case "BLANK_TET":
+    private final static int BLOCK_SIZE = 25;
+    public Block(double x, double y, Tetromino type) {
+        super(x, y, BLOCK_SIZE, BLOCK_SIZE);
+        switch (type) {
+            case BLANK:
                 this.image = BLANK_TET;
                 break;
-            case "I_TET":
+            case I:
                 this.image = I_TET;
                 break;
-            case "J_TET":
+            case J:
                 this.image = J_TET;
                 break;
-            case "L_TET":
+            case L:
                 this.image = L_TET;
                 break;
-            case "O_TET":
+            case O:
                 this.image = O_TET;
                 break;
-            case "T_TET":
+            case S:
+                this.image = S_TET;
+                break;
+            case T:
                 this.image = T_TET;
                 break;
-            case "Z_TET":
+            case Z:
                 this.image = Z_TET;
-                break;
-            case "TET":
-                this.image = TET;
                 break;
         }
     }

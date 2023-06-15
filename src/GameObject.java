@@ -10,9 +10,7 @@ import bagel.util.Rectangle;
 public class GameObject extends Rectangle{
     protected Image image;
 
-    public GameObject(Point point, double width, double height) {
-        super(point, width, height);
-    }
+    public GameObject(double x, double y, double width, double height) {super(x, y, width, height);}
     public void render() {
         this.image.drawFromTopLeft(this.left(), this.top());
     }

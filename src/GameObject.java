@@ -15,7 +15,4 @@ public class GameObject extends Rectangle{
         this.image.drawFromTopLeft(this.left(), this.top());
     }
 
-    // GETTER SETTER METHODS
-    public void setImage(Image image){this.image = image;}
-    public Image getImage() {return this.image;}
 }

@@ -219,8 +219,41 @@ public class Tet extends GameObject{
                     point = new Point(block.left(), block.top() + 25);
                     block.moveTo(point);
                     break;
+                case HARD_DROP:
+                    hardDrop(placedBlocks);
+                    break;
             }
         }
+    }
+
+    public void hardDrop(ArrayList<Block> placedBlocks) {
+        while (!overlapsPlacedBlocks(placedBlocks) && inBounds()) {
+            move(Move.SOFT_DROP, placedBlocks);
+        }
+    }
+
+    public boolean inBounds() {
+        for (Block block: blocks) {
+            if ((block.left() <= LEFT_BOUNDARY - BLOCK_SIZE) ||
+                (block.left() >= RIGHT_BOUNDARY) ||
+                (block.bottom() >= BOTTOM_BOUNDARY + BLOCK_SIZE)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean overlapsPlacedBlocks(ArrayList<Block> placedBlocks) {
+        for (Block block: blocks) {
+            for (Block placedBlock: placedBlocks) {
+                if ((block.left() == placedBlock.left()) &&
+                        (block.top() == placedBlock.top())) {
+                    return true;
+                }
+            }
+
+        }
+        return false;
     }
     private ArrayList<Block> initBlocks(Tetromino tetType) {
         type = tetType;

@@ -1,5 +1,7 @@
 import bagel.*;
 import bagel.util.Point;
+
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -12,6 +14,8 @@ public class javaTetris extends AbstractGame  {
     private final static int LEFT_BOUNDARY = 50;
     private final static int RIGHT_BOUNDARY = 300;
     private final static int BOTTOM_BOUNDARY = 550;
+    private final static int BOARD_BLOCK_WIDTH = 10;
+    private final static int BOARD_BLOCK_HEIGHT = 20;
     private final static int BLOCK_SIZE = 25;
     private static ArrayList<Block> backWall;
     private ArrayList<Tet> tets = new ArrayList<>(); // TODO DELETE LATER
@@ -68,7 +72,7 @@ public class javaTetris extends AbstractGame  {
         curTet.move(str(input), placedBlocks);
         bottomCollision = false;
         handleCollision(curTet, str(input));
-        if (!bottomCollision) {
+        if (!bottomCollision && str(input) != Move.SOFT_DROP) {
             autoMove(curTet);
             handleCollision(curTet, Move.SOFT_DROP);
         }
@@ -83,7 +87,7 @@ public class javaTetris extends AbstractGame  {
             curTet.render();
         }
 
-
+        clearLines();
 
 
         // TODO remove later
@@ -91,11 +95,44 @@ public class javaTetris extends AbstractGame  {
 
     }
 
+    public void clearLines() {
+        ArrayList<Integer> linesToClear = new ArrayList<>();
+        // find lines that need to be cleared
+        for (int row = 0; row < BOARD_BLOCK_HEIGHT; row++) {
+            int blockCount = 0;
+            for (Block block: placedBlocks) {
+                if (block.top() == 50 + row * BLOCK_SIZE) {
+                    blockCount++;
+                }
+            }
+            if (blockCount == BOARD_BLOCK_WIDTH) {
+                linesToClear.add(row);
+            }
+        }
+
+        // remove blocks in cleared lines
+        for (int line:linesToClear) {
+            ArrayList<Block> blocksToRemove = new ArrayList<>();
+            for(Block block: placedBlocks) {
+                if (block.top() == 50 + line * BLOCK_SIZE) {
+                    blocksToRemove.add(block);
+                } else if (block.top() < 50 + line * BLOCK_SIZE) {
+                    Point point = new Point(block.left(), block.top() + BLOCK_SIZE);
+                    block.moveTo(point);
+                }
+            }
+            for (Block block: blocksToRemove) {
+                placedBlocks.remove(block);
+            }
+        }
+    }
+
 
     public void updateCurTet() {
         if (curTet != null) {
             return;
         }
+        frameCount = 0;
         curTet = nextTets.poll();
         assert curTet != null;
         System.out.println(curTet.toString());
@@ -184,15 +221,18 @@ public class javaTetris extends AbstractGame  {
     }
 
     public Move str(Input input) {
-        if (input.wasPressed(Keys.J)) {
+        if (input.wasPressed(Keys.J) ||
+            (input.isDown(Keys.J) && frameCount % 10 == 0)) {
             return Move.MOVE_LEFT;
-        } else if (input.wasPressed(Keys.L)){
+        } else if (input.wasPressed(Keys.L) ||
+            (input.isDown(Keys.L) && frameCount % 10 == 0)){
             return Move.MOVE_RIGHT;
         } else if (input.wasPressed(Keys.I)){
             return Move.ROTATE_RIGHT;
         } else if (input.wasPressed(Keys.Z)){
             return Move.ROTATE_LEFT;
-        } else if (input.wasPressed(Keys.K)){
+        } else if (input.wasPressed(Keys.K) ||
+                (input.isDown(Keys.K) && frameCount % 5 == 0)){
             return Move.SOFT_DROP;
         } else if (input.wasPressed(Keys.SPACE)){
             return Move.HARD_DROP;

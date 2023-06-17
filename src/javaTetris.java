@@ -14,7 +14,7 @@ public class javaTetris extends AbstractGame  {
     private final static int BOTTOM_BOUNDARY = 550;
     private final static int BLOCK_SIZE = 25;
     private static ArrayList<Block> backWall;
-    private ArrayList<Tet> tets = new ArrayList<>(); // DELETE LATER
+    private ArrayList<Tet> tets = new ArrayList<>(); // TODO DELETE LATER
     private Queue<Tet> nextTets = new LinkedList<>();
     private Tet curTet = null;
     private ArrayList<Block> placedBlocks = new ArrayList<>();
@@ -65,7 +65,7 @@ public class javaTetris extends AbstractGame  {
 
 
 
-        curTet.move(str(input));
+        curTet.move(str(input), placedBlocks);
         bottomCollision = false;
         handleCollision(curTet, str(input));
         if (!bottomCollision) {
@@ -73,7 +73,7 @@ public class javaTetris extends AbstractGame  {
             handleCollision(curTet, Move.SOFT_DROP);
         }
         if (bottomCollision) {
-            curTet.move(Move.MOVE_UP);
+            curTet.move(Move.MOVE_UP, null);
             curTet.render();
             for (Block block: curTet.blocks) {
                 placedBlocks.add(block);
@@ -84,10 +84,14 @@ public class javaTetris extends AbstractGame  {
         }
 
 
+
+
         // TODO remove later
         //renderTets();
 
     }
+
+
     public void updateCurTet() {
         if (curTet != null) {
             return;
@@ -105,10 +109,10 @@ public class javaTetris extends AbstractGame  {
         System.out.println("collision");
         switch (move) {
             case MOVE_LEFT:
-                tet.move(Move.MOVE_RIGHT);
+                tet.move(Move.MOVE_RIGHT, null);
                 break;
             case MOVE_RIGHT:
-                tet.move(Move.MOVE_LEFT);
+                tet.move(Move.MOVE_LEFT, null);
                 break;
             case SOFT_DROP:
                 System.out.println("bottomCollision flag");
@@ -128,8 +132,6 @@ public class javaTetris extends AbstractGame  {
         return true;
     }
 
-    // TODO advanced collision check
-    // counter before piece is set
     public boolean collisionCheck(Tet tet) {
         // tet and placedBlocks
         for (Block block: tet.blocks) {
@@ -144,7 +146,7 @@ public class javaTetris extends AbstractGame  {
 
     public void initialiseTetris() {
         if (!fileRead) {
-            System.out.println("fileread");
+            System.out.println("initialisation");
             addBlocks();
             initNextTets();
             fileRead = true;
@@ -170,7 +172,7 @@ public class javaTetris extends AbstractGame  {
 
     public void autoMove(Tet tet) {
         if (frameCount == speed[speedLevel]) {
-            tet.move(Move.SOFT_DROP);
+            tet.move(Move.SOFT_DROP, null);
         }
     }
 

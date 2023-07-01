@@ -1,3 +1,3 @@
 public enum Tetromino {
-    I, O, T, J, L, S, Z, BLANK;
+    I, O, T, J, L, S, Z, BLANK, SHADOW;
 }

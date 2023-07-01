@@ -9,6 +9,7 @@ public class Tet extends GameObject{
     private final static int BLOCK_SIZE = 25;
     private Tetromino type;
     public ArrayList<Block> blocks;
+    public ArrayList<Block> blocksOrigPos;
     private Block rotationBlock;
     private int rotationIndex = 0;
     int[][][] offsetData;
@@ -30,20 +31,82 @@ public class Tet extends GameObject{
         return ("tet is of type: " + this.type);
     }
 
+    @Override
+    public void moveTo(Point point) {
+        for (int i = 0; i < blocks.size(); i++) {
+            double newX = blocksOrigPos.get(i).left() + point.x;
+            double newY = blocksOrigPos.get(i).top() + point.y;
+            blocks.get(i).moveTo(new Point(newX, newY));
+        }
+    }
+
+    public void drawShadow(ArrayList<Block> placedBlocks) {
+        ArrayList<Block> shadowBlocks = new ArrayList<>();
+        for (Block block: blocks) {
+            shadowBlocks.add(new Block(block.left(), block.top(), Tetromino.SHADOW));
+        }
+
+        boolean intersect = false;
+        while (!intersect) {
+            for (Block shadowBlock: shadowBlocks) {
+                shadowBlock.moveTo(new Point(shadowBlock.left(), shadowBlock.top() + 25));
+            }
+            if (placedBlocks.size() == 0) {
+                for (Block shadowBlock: shadowBlocks) {
+                    if (shadowBlock.top() == 550) {
+                        intersect = true;
+                        break;
+                    }
+                }
+            } else {
+                for (Block placedBlock: placedBlocks) {
+                    for (Block shadowBlock: shadowBlocks) {
+                        if ((placedBlock.left() == shadowBlock.left()) &&
+                                (placedBlock.top() == shadowBlock.top())) {
+                            intersect = true;
+                            break;
+                        } else
+                        if (shadowBlock.top() == 550) {
+                            intersect = true;
+                            break;
+                        }
+                    }
+                    if (intersect) {
+                        break;
+                    }
+                }
+            }
+        }
+        for (Block shadowBlock: shadowBlocks) {
+            shadowBlock.moveTo(new Point(shadowBlock.left(), shadowBlock.top() - 25));
+            shadowBlock.render();
+        }
+    }
+
+    public boolean canMovePiece(ArrayList<Block> placedBlocks, double posX, double posY) {
+        for (Block block : placedBlocks) {
+            if ((block.left() == posX) && (block.top() == posY)) {
+                return false;
+            }
+        }
+        // TODO consider placed shadow blocks as well
+
+        return true;
+    }
     public boolean canMovePiece(int[] offset, ArrayList<Block> placedBlocks) {
         for (Block block: blocks) {
             double newX = block.left() + BLOCK_SIZE * offset[0];
             double newY = block.top() + BLOCK_SIZE * offset[1];
             // in bounds
             if ((newX <= LEFT_BOUNDARY - BLOCK_SIZE) ||
-                (newX >= RIGHT_BOUNDARY) ||
-                (newY >= BOTTOM_BOUNDARY + BLOCK_SIZE)) {
+                    (newX >= RIGHT_BOUNDARY) ||
+                    (newY >= BOTTOM_BOUNDARY + BLOCK_SIZE)) {
                 return false;
             }
             // overlaps a placed block
             for (Block placedBlock: placedBlocks) {
                 if ((placedBlock.left() == newX) &&
-                    (placedBlock.top() == newY)) {
+                        (placedBlock.top() == newY)) {
                     return false;
                 }
             }
@@ -51,7 +114,7 @@ public class Tet extends GameObject{
         return true;
     }
 
-    public void moveTo(int[] offset) {
+    public void offsetBy(int[] offset) {
         for (Block block: blocks) {
             double newX = block.left() + BLOCK_SIZE * offset[0];
             double newY = block.top() + BLOCK_SIZE * offset[1];
@@ -77,7 +140,7 @@ public class Tet extends GameObject{
         }
 
         if (movePossible) {
-            moveTo(endOffset);
+            offsetBy(endOffset);
         }
         return movePossible;
     }
@@ -235,8 +298,8 @@ public class Tet extends GameObject{
     public boolean inBounds() {
         for (Block block: blocks) {
             if ((block.left() <= LEFT_BOUNDARY - BLOCK_SIZE) ||
-                (block.left() >= RIGHT_BOUNDARY) ||
-                (block.bottom() >= BOTTOM_BOUNDARY + BLOCK_SIZE)) {
+                    (block.left() >= RIGHT_BOUNDARY) ||
+                    (block.bottom() >= BOTTOM_BOUNDARY + BLOCK_SIZE)) {
                 return false;
             }
         }
@@ -258,6 +321,7 @@ public class Tet extends GameObject{
     private ArrayList<Block> initBlocks(Tetromino tetType) {
         type = tetType;
         ArrayList<Block> tempBlocks = new ArrayList<>();
+        ArrayList<Block> tempOrigPos = new ArrayList<>();
         double left = this.left();
         double top = this.top();
         switch (tetType) {
@@ -267,6 +331,10 @@ public class Tet extends GameObject{
                 tempBlocks.add(rotationBlock);
                 tempBlocks.add(new Block(left + 50, top + 25, Tetromino.I));
                 tempBlocks.add(new Block(left + 75, top + 25, Tetromino.I));
+                tempOrigPos.add(new Block(0, 25, Tetromino.I));
+                tempOrigPos.add(new Block(25, 25, Tetromino.I));
+                tempOrigPos.add(new Block(50, 25, Tetromino.I));
+                tempOrigPos.add(new Block(75, 25, Tetromino.I));
                 break;
             case J:
                 rotationBlock = new Block(left + 25, top + 25, Tetromino.J);
@@ -274,6 +342,10 @@ public class Tet extends GameObject{
                 tempBlocks.add(new Block(left, top + 25, Tetromino.J));
                 tempBlocks.add(rotationBlock);
                 tempBlocks.add(new Block(left + 50, top + 25, Tetromino.J));
+                tempOrigPos.add(new Block(0, 0, Tetromino.J));
+                tempOrigPos.add(new Block(0, 25, Tetromino.J));
+                tempOrigPos.add(new Block(25, 25, Tetromino.J));
+                tempOrigPos.add(new Block(50, 25, Tetromino.J));
                 break;
             case L:
                 rotationBlock = new Block(left + 25, top + 25, Tetromino.L);
@@ -281,6 +353,10 @@ public class Tet extends GameObject{
                 tempBlocks.add(new Block(left, top + 25, Tetromino.L));
                 tempBlocks.add(rotationBlock);
                 tempBlocks.add(new Block(left + 50, top + 25, Tetromino.L));
+                tempOrigPos.add(new Block(50, 0, Tetromino.L));
+                tempOrigPos.add(new Block(0, 25, Tetromino.L));
+                tempOrigPos.add(new Block(25, 25, Tetromino.L));
+                tempOrigPos.add(new Block(50, 25, Tetromino.L));
                 break;
             case O:
                 rotationBlock = new Block(left + 25, top + 25, Tetromino.O);
@@ -288,6 +364,10 @@ public class Tet extends GameObject{
                 tempBlocks.add(new Block(left + 50, top, Tetromino.O));
                 tempBlocks.add(rotationBlock);
                 tempBlocks.add(new Block(left + 50,top + 25, Tetromino.O));
+                tempOrigPos.add(new Block(25, 0, Tetromino.O));
+                tempOrigPos.add(new Block(50, 0, Tetromino.O));
+                tempOrigPos.add(new Block(25, 25, Tetromino.O));
+                tempOrigPos.add(new Block(50, 25, Tetromino.O));
                 break;
             case S:
                 rotationBlock = new Block(left + 25,top + 25, Tetromino.S);
@@ -295,6 +375,10 @@ public class Tet extends GameObject{
                 tempBlocks.add(new Block(left + 50, top, Tetromino.S));
                 tempBlocks.add(new Block(left, top + 25, Tetromino.S));
                 tempBlocks.add(rotationBlock);
+                tempOrigPos.add(new Block(25, 0, Tetromino.S));
+                tempOrigPos.add(new Block(50, 0, Tetromino.S));
+                tempOrigPos.add(new Block(0, 25, Tetromino.S));
+                tempOrigPos.add(new Block(25, 25, Tetromino.S));
                 break;
             case T:
                 rotationBlock = new Block(left + 25, top + 25, Tetromino.T);
@@ -302,6 +386,10 @@ public class Tet extends GameObject{
                 tempBlocks.add(new Block(left, top + 25, Tetromino.T));
                 tempBlocks.add(rotationBlock);
                 tempBlocks.add(new Block(left + 50,top + 25, Tetromino.T));
+                tempOrigPos.add(new Block(25, 0, Tetromino.T));
+                tempOrigPos.add(new Block(0, 25, Tetromino.T));
+                tempOrigPos.add(new Block(25, 25, Tetromino.T));
+                tempOrigPos.add(new Block(50, 25, Tetromino.T));
                 break;
             case Z:
                 rotationBlock = new Block(left+ 25, top + 25, Tetromino.Z);
@@ -309,8 +397,13 @@ public class Tet extends GameObject{
                 tempBlocks.add(new Block(left + 25, top, Tetromino.Z));
                 tempBlocks.add(rotationBlock);
                 tempBlocks.add(new Block(left + 50,top + 25, Tetromino.Z));
+                tempOrigPos.add(new Block(0, 0, Tetromino.Z));
+                tempOrigPos.add(new Block(25, 0, Tetromino.Z));
+                tempOrigPos.add(new Block(25, 25, Tetromino.Z));
+                tempOrigPos.add(new Block(50, 25, Tetromino.Z));
                 break;
         }
+        blocksOrigPos = tempOrigPos;
         return tempBlocks;
     }
 }

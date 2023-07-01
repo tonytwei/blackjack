@@ -6,6 +6,7 @@ import bagel.util.Rectangle;
 
 public class Block extends GameObject{
     private final Image BLANK_TET = new Image("res/blocks/Tet.png");
+    private final Image SHADOW_TET = new Image("res/blocks/-Tet.png");
     private final Image I_TET = new Image("res/blocks/ITet.png");
     private final Image J_TET = new Image("res/blocks/JTet.png");
     private final Image L_TET = new Image("res/blocks/LTet.png");
@@ -19,6 +20,9 @@ public class Block extends GameObject{
         switch (type) {
             case BLANK:
                 this.image = BLANK_TET;
+                break;
+            case SHADOW:
+                this.image = SHADOW_TET;
                 break;
             case I:
                 this.image = I_TET;

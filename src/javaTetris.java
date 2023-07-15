@@ -93,6 +93,7 @@ public class javaTetris extends AbstractGame  {
                 drawQueue();
                 drawHold();
                 drawScore();
+                drawLevel();
                 BACKGROUND_END.draw(175, 275);
                 TEXT_24.drawString("GAME OVER", 95, 280);
                 break;

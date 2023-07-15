@@ -5,7 +5,7 @@ Java Tetris is an implementation of the classic Tetris game using Java and utili
 ## Game Demo
 
 <p align="center">
-<img alt="Tetris demo" src="https://i.imgur.com/1JEUdcf.gif" width="300"/>
+<img alt="Tetris demo" src="https://i.imgur.com/uzM45H5.gif" width="300"/>
 </p>
 
 ## Game Description

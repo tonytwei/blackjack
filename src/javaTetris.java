@@ -8,6 +8,7 @@ import java.util.Queue;
 public class javaTetris extends AbstractGame  {
     private final static String GAME_TITLE = "javaTetris";
     private final Image BACKGROUND_IMAGE = new Image("res/background0.png");
+    private final Image BACKGROUND_END = new Image("res/background1.png");
     private final Font TEXT_40 = new Font("res/FSO8BITR.TTF", 40);
     private final Font TEXT_24 = new Font("res/FSO8BITR.TTF", 24);
     private final static int WINDOW_WIDTH = 500;
@@ -18,11 +19,7 @@ public class javaTetris extends AbstractGame  {
     private final static int BOARD_BLOCK_WIDTH = 10;
     private final static int BOARD_BLOCK_HEIGHT = 20;
     private final static int BLOCK_SIZE = 25;
-    private final static int NOT_STARTED = 0;
-    private final static int RUNNING = 1;
-    private final static int PAUSED = 2;
-    private final static int COUNTDOWN = 3;
-    private static int GAME_STATE = NOT_STARTED;
+    private static GameState GAME_STATE = GameState.NOT_STARTED;
     private static ArrayList<Block> backWall = new ArrayList<>();
     private static ArrayList<Block> pauseWall = new ArrayList<>();
     private ArrayList<Tet> tets = new ArrayList<>(); // TODO DELETE LATER
@@ -33,6 +30,7 @@ public class javaTetris extends AbstractGame  {
     boolean fileRead = false;
     private int gameScore = 0;
     private int frameCount = 0;
+    private int moveFrameCount = 0;
     private int speedLevel = 0;
     private Integer countdown;
     private boolean bottomCollision = false;
@@ -54,6 +52,7 @@ public class javaTetris extends AbstractGame  {
             Window.close();
         }
         BACKGROUND_IMAGE.draw(Window.getWidth()/2.0, Window.getHeight()/2.0);
+
         switch (GAME_STATE) {
             case NOT_STARTED:
                 initialiseTetris();
@@ -65,14 +64,20 @@ public class javaTetris extends AbstractGame  {
                 checkPause(str(input));
                 renderPlacedBlocks();
                 frameCounter();
+                if (inputWasPressed(input)) {
+                    moveFrameCount = 0;
+                }
                 updateCurTet();
+                checkEnd();
                 drawShadowTet();
                 drawQueue();
                 checkForHold(str(input));
                 drawHold();
-                moveRenderCurTet(str(input));
+                moveRenderCurTet(str(input), input);
                 clearLines();
+                updateGameLevel();
                 drawScore();
+                drawLevel();
                 break;
             case PAUSED:
                 checkPause(str(input));
@@ -82,16 +87,49 @@ public class javaTetris extends AbstractGame  {
                 frameCounter();
                 drawCountdown();
                 break;
+            case ENDED:
+                drawGameBackground();
+                renderPlacedBlocks();
+                drawQueue();
+                drawHold();
+                drawScore();
+                BACKGROUND_END.draw(175, 275);
+                TEXT_24.drawString("GAME OVER", 95, 280);
+                break;
         }
     }
 
+    public void updateGameLevel() {
+        if (gameScore / 2000 > 11) {
+            speedLevel = 11;
+        } else {
+            speedLevel = gameScore / 2000;
+        }
+    }
+
+    public void checkEnd() {
+        for (Block block: curTet.blocks) {
+            for (Block placedBlock: placedBlocks) {
+                if (block.left() == placedBlock.left() && block.top() == placedBlock.top()) {
+                    GAME_STATE = GameState.ENDED;
+                    return;
+                }
+            }
+        }
+    }
+
+    public void drawLevel() {
+        TEXT_24.drawString("LEVEL " + speedLevel, 335, 65);
+    }
     public void drawScore() {
-        TEXT_24.drawString("SCORE " + gameScore, 335, 50);
+        int x = gameScore > 1000 ? 310 : 335;
+        x = gameScore > 10000 ? 295 : x;
+        TEXT_24.drawString("SCORE " + gameScore, x, 40);
     }
 
     public void drawCountdown() {
         if (countdown == 0) {
-            GAME_STATE = RUNNING;
+            GAME_STATE = GameState.RUNNING;
             return;
         }
         TEXT_40.drawString(countdown.toString(), 225, 200);
@@ -101,7 +139,7 @@ public class javaTetris extends AbstractGame  {
     }
     public void checkStart(Move move) {
         if (move == Move.HARD_DROP) {
-            GAME_STATE = COUNTDOWN;
+            GAME_STATE = GameState.COUNTDOWN;
             frameCount = 0;
             countdown = 3;
         }
@@ -118,9 +156,9 @@ public class javaTetris extends AbstractGame  {
     }
     public void checkPause(Move move) {
         if (move == Move.PAUSE) {
-            GAME_STATE = PAUSED;
-        } else if (GAME_STATE == PAUSED && move == Move.HARD_DROP) {
-            GAME_STATE = COUNTDOWN;
+            GAME_STATE = GameState.PAUSED;
+        } else if (GAME_STATE == GameState.PAUSED && move == Move.HARD_DROP) {
+            GAME_STATE = GameState.COUNTDOWN;
         }
     }
     public void drawHold() {
@@ -129,17 +167,28 @@ public class javaTetris extends AbstractGame  {
         }
     }
 
-    public void moveRenderCurTet(Move move) {
+    public void moveRenderCurTet(Move move, Input input) {
         if (curTet == null) {
             return;
         }
-        curTet.move(move, placedBlocks);
+
+        if (move == Move.MOVE_LEFT || move == Move.MOVE_RIGHT) {
+            // TODO fix horiz movement when held
+            if (moveFrameCount == 0/* || inputWasHeld(input)*/) {
+                curTet.move(move, placedBlocks);
+            }
+        } else {
+            curTet.move(move, placedBlocks);
+        }
         bottomCollision = false;
+
         handleCollision(curTet, move);
         if (!bottomCollision && move != Move.SOFT_DROP) {
-            autoMove(curTet);
+            autoMoveDown(curTet);
             handleCollision(curTet, Move.SOFT_DROP);
         }
+
+
         if (bottomCollision) {
             curTet.move(Move.MOVE_UP, null);
             curTet.render();
@@ -237,6 +286,7 @@ public class javaTetris extends AbstractGame  {
         frameCount = 0;
         curTet = nextTets.poll();
         curTet.moveTo(new Point(125, 50));
+        System.out.println(curTet.toString());
         nextTets.add(generateTet());
     }
 
@@ -244,6 +294,7 @@ public class javaTetris extends AbstractGame  {
         if ((!collisionCheck(tet) && inBounds(tet)) || (move == null)) {
             return;
         }
+        System.out.println("collision");
         switch (move) {
             case MOVE_LEFT:
                 tet.move(Move.MOVE_RIGHT, null);
@@ -252,6 +303,7 @@ public class javaTetris extends AbstractGame  {
                 tet.move(Move.MOVE_LEFT, null);
                 break;
             case SOFT_DROP:
+                System.out.println("bottomCollision flag");
                 bottomCollision = true;
                 break;
         }
@@ -282,6 +334,7 @@ public class javaTetris extends AbstractGame  {
 
     public void initialiseTetris() {
         if (!fileRead) {
+            System.out.println("initialisation");
             addBlocks();
             initNextTets();
             initBackWall();
@@ -307,7 +360,7 @@ public class javaTetris extends AbstractGame  {
         }
     }
 
-    public void autoMove(Tet tet) {
+    public void autoMoveDown(Tet tet) {
         if (frameCount == speed[speedLevel]) {
             tet.move(Move.SOFT_DROP, null);
         }
@@ -318,20 +371,42 @@ public class javaTetris extends AbstractGame  {
         if (frameCount == 60) {
             frameCount = 0;
         }
+
+        moveFrameCount++;
+        if (moveFrameCount == speed[speedLevel]) {
+            moveFrameCount = 0;
+        }
+    }
+
+    public boolean inputWasHeld(Input input) {
+        if (input.isDown(Keys.J) ||
+            input.isDown(Keys.L) ||
+            input.isDown(Keys.K)) {
+            return true;
+        }
+        return false;
+    }
+    public boolean inputWasPressed(Input input) {
+        if (input.wasPressed(Keys.J) ||
+            input.wasPressed(Keys.L) ||
+            input.wasPressed(Keys.K)) {
+            return true;
+        }
+        return false;
     }
 
     public Move str(Input input) {
-        if (input.wasPressed(Keys.LEFT) ||
+        if (input.wasPressed(Keys.J) ||
                 (input.isDown(Keys.J) && frameCount % 10 == 0)) {
             return Move.MOVE_LEFT;
-        } else if (input.wasPressed(Keys.RIGHT) ||
+        } else if (input.wasPressed(Keys.L) ||
                 (input.isDown(Keys.L) && frameCount % 10 == 0)){
             return Move.MOVE_RIGHT;
-        } else if (input.wasPressed(Keys.UP)){
+        } else if (input.wasPressed(Keys.I)){
             return Move.ROTATE_RIGHT;
         } else if (input.wasPressed(Keys.Z)){
             return Move.ROTATE_LEFT;
-        } else if (input.wasPressed(Keys.DOWN) ||
+        } else if (input.wasPressed(Keys.K) ||
                 (input.isDown(Keys.K) && frameCount % 5 == 0)){
             return Move.SOFT_DROP;
         } else if (input.wasPressed(Keys.SPACE)){

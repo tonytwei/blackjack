@@ -99,14 +99,14 @@ public class Tet extends GameObject{
             double newY = block.top() + BLOCK_SIZE * offset[1];
             // in bounds
             if ((newX <= LEFT_BOUNDARY - BLOCK_SIZE) ||
-                    (newX >= RIGHT_BOUNDARY) ||
-                    (newY >= BOTTOM_BOUNDARY + BLOCK_SIZE)) {
+                (newX >= RIGHT_BOUNDARY) ||
+                (newY >= BOTTOM_BOUNDARY + BLOCK_SIZE)) {
                 return false;
             }
             // overlaps a placed block
             for (Block placedBlock: placedBlocks) {
                 if ((placedBlock.left() == newX) &&
-                        (placedBlock.top() == newY)) {
+                    (placedBlock.top() == newY)) {
                     return false;
                 }
             }
@@ -298,8 +298,8 @@ public class Tet extends GameObject{
     public boolean inBounds() {
         for (Block block: blocks) {
             if ((block.left() <= LEFT_BOUNDARY - BLOCK_SIZE) ||
-                    (block.left() >= RIGHT_BOUNDARY) ||
-                    (block.bottom() >= BOTTOM_BOUNDARY + BLOCK_SIZE)) {
+                (block.left() >= RIGHT_BOUNDARY) ||
+                (block.bottom() >= BOTTOM_BOUNDARY + BLOCK_SIZE)) {
                 return false;
             }
         }

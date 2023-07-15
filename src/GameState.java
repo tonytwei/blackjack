@@ -1,0 +1,3 @@
+public enum GameState {
+    NOT_STARTED, RUNNING, PAUSED, COUNTDOWN, ENDED;
+}
